@@ -9,7 +9,7 @@ from copy import deepcopy
 Import wav file
 """
 
-y, Fs = librosa.load("project_test1.wav")
+y, Fs = librosa.load("./police03short.wav")
 duration = librosa.get_duration(y, sr=Fs)
 
 """
@@ -53,7 +53,7 @@ delta = np.zeros(W_padded.shape)
 kmax = 5 # represents the number of iterations
 
 for k in range(kmax-1):
-    alpha = np.var(P)**2 / (np.var(P)**2 + np.var(H)**2)
+    alpha = 0.5
     delta[1:-1, 1:-1] = alpha * (H[1:-1, 0:-2] - 2 * H[1:-1, 1:-1] + H[1:-1, 2:])/4 - (
         1 - alpha) * (P[0:-2, 1:-1] - 2 * P[1:-1, 1:-1] + P[2:, 1:-1])/4
     H = np.minimum(np.maximum(H + delta, 0), W_padded)
@@ -79,27 +79,6 @@ Plot harcusive components and percussive components power spectrum
 
 mag_H = np.abs(H_kmax)
 
-# Plot the power spectrogram
-librosa.display.specshow(librosa.amplitude_to_db(mag_H, ref=np.max),
-                         y_axis='log', x_axis='time')
-
-plt.title('Power spectrogram')
-plt.colorbar(format='%+2.0f dB')
-plt.tight_layout()
-plt.show()
-
-mag_P = np.abs(P_kmax)
-
-# Plot the power spectrogram
-librosa.display.specshow(librosa.amplitude_to_db(mag_P, ref=np.max),
-                         y_axis='log', x_axis='time')
-
-plt.title('Power spectrogram')
-plt.colorbar(format='%+2.0f dB')
-plt.tight_layout()
-plt.show()
-
-
 """
 Step 8: convert H_kmax, P_kmax into waveforms
 """
@@ -113,3 +92,23 @@ print(p_hat)
 librosa.output.write_wav("harmonic.wav", h_hat, Fs, norm=False)
 librosa.output.write_wav("percussive.wav", p_hat, Fs, norm=False)
 
+# Plot the power spectrogram
+mag_H = np.abs(librosa.stft(h_hat))
+librosa.display.specshow(librosa.amplitude_to_db(mag_H, ref=np.max),
+                         y_axis='log', x_axis='time')
+
+plt.title('Power spectrogram')
+plt.colorbar(format='%+2.0f dB')
+plt.tight_layout()
+plt.show()
+
+mag_P = np.abs(librosa.stft(p_hat))
+
+# Plot the power spectrogram
+librosa.display.specshow(librosa.amplitude_to_db(mag_P, ref=np.max),
+                         y_axis='log', x_axis='time')
+
+plt.title('Power spectrogram')
+plt.colorbar(format='%+2.0f dB')
+plt.tight_layout()
+plt.show()
