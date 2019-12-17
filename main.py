@@ -113,8 +113,28 @@ def seperate(filename, gamma = 0.3):
     librosa.output.write_wav("percussive.wav", p_hat, Fs, norm=False)
 
 
+def signal_to_noise(original_file, separated_file):
+    """
+    Calculate signal to noise ratio
+    @param: original_file: original file name
+            separated_file: separated file name
+    @return: snr: signal-to-noise ration
+    """
+    audio_ori, fs_ori = librosa.load(original_file, sr = None)
+    audio_sep, fs_sep = librosa.load(separated_file, sr = None)
+
+    sum_square_ori = np.sum(audio_ori**2)
+    sum_square_minus = np.sum((audio_ori - audio_sep)**2)
+
+    snr = 10*np.log10(sum_square_ori / sum_square_minus)
+
+    return snr
+
+
 def main():
     seperate("police03short.wav")
+
+    # Plot power spectrum of original signal, harmonic componenet and percussive component
     plot_spectrum("police03short.wav")
     plot_spectrum("harmonic.wav")
     plot_spectrum("percussive.wav")
