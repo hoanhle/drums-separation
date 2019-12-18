@@ -17,14 +17,14 @@ def plot_spectrum(filename):
 
     # Plot the power spectrogram
     librosa.display.specshow(librosa.amplitude_to_db(D, ref=np.max),
-                             y_axis='log', x_axis='time')
+                             y_axis='linear', x_axis='time')
 
     plt.title('Power spectrogram of ' + filename)
     plt.colorbar(format='%+2.0f dB')
     plt.tight_layout()
     plt.show()
 
-def range_compress(D, gamma = 0.3):
+def range_compress(D, gamma):
     """
     Calculate range compressed power spectrum matrix
     @param: D: absolute value of stft matri
@@ -35,7 +35,7 @@ def range_compress(D, gamma = 0.3):
     return W
 
 
-def seperate(filename, gamma = 0.3):
+def seperate(filename, gamma):
     """
     Seperate signal into harmonic and percusive components
     @param: filename: filename of the signal
@@ -74,7 +74,7 @@ def seperate(filename, gamma = 0.3):
     """
 
     delta = np.zeros(W_padded.shape)
-    kmax = 20  # represents the number of iterations
+    kmax = 10  # represents the number of iterations
 
     for k in range(kmax-1):
         alpha = 0.5
@@ -142,7 +142,7 @@ def evalute_algorithm(filename, gammas):
     snr_percusives = np.array([])
 
     for gamma in gammas:
-        seperate(filename, gamma)
+        seperate(filename, gamma=gamma)
 
         # Calculate the signal to noise ratio
         snr_harmonic = signal_to_noise(filename, "harmonic.wav")
@@ -151,28 +151,33 @@ def evalute_algorithm(filename, gammas):
         snr_percusive = signal_to_noise(filename, "percussive.wav")
         snr_percusives = np.append(snr_percusives, snr_percusive)
 
-    x_axis = np.linspace(0, 1, 5)
-
-    plt.plot(x_axis, snr_harmonics, label='Harmonic')
-    plt.plot(x_axis, snr_percusives, label='Percussive')
+    plt.plot(gammas, snr_harmonics, label='Harmonic')
     plt.xlabel('Gamma')
     plt.ylabel('SNR')
     plt.legend()
-    plt.title('Signal-to-noise of ' + filename + ' with different gammas')
+    plt.title('Signal-to-noise original subtract harmonic component of ' + filename)
+    plt.show()
+    
+    plt.plot(gammas, snr_percusives, label='Percussive')
+    plt.xlabel('Gamma')
+    plt.ylabel('SNR')
+    plt.legend()
+    plt.title('Signal-to-noise original subtract percusive component of ' + filename)
     plt.show()
 
 
 def main():
-    # Seperate the signal with default gamma
-    seperate("police03short.wav")
+    filename = "police03short.wav"
+    # Seperate the signal with default gamma    
+    seperate(filename, 0.1)
 
     # Plot power spectrum of original signal, harmonic componenet and percussive component
-    plot_spectrum("police03short.wav")
+    plot_spectrum(filename)
     plot_spectrum("harmonic.wav")
     plot_spectrum("percussive.wav")
 
     # Evaluate algorithms
-    gammas = [0.1, 0.3, 0.5, 0.7, 1.0]
-    evalute_algorithm("police03short.wav", gammas)
+    gammas = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    evalute_algorithm(filename, gammas)
     
 main()
